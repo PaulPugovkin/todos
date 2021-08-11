@@ -4,11 +4,31 @@ import Container from './components/Container';
 import TodoList from './components/TodoList';
 import TodoEditor from './components/TodoEditor';
 import Filter from './components/Filter';
+import Modal from './components/Modal/Modal';
 
 class App extends Component {
   state = {
     todos: [],
     filter: '',
+    showModal: false,
+  };
+
+  componentDidMount() {
+    const todos = localStorage.getItem('todos');
+    const parsedTodos = JSON.parse(todos);
+    if (parsedTodos) this.setState({ todos: parsedTodos });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.todos !== prevState.todos) {
+      localStorage.setItem('todos', JSON.stringify(this.state.todos));
+    }
+  }
+
+  toggleModal = () => {
+    this.setState(({ showModal }) => ({
+      showModal: !showModal,
+    }));
   };
 
   addTodo = text => {
@@ -72,20 +92,8 @@ class App extends Component {
     );
   };
 
-  componentDidMount() {
-    const todos = localStorage.getItem('todos');
-    const parsedTodos = JSON.parse(todos);
-    if (parsedTodos) this.setState({ todos: parsedTodos });
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.todos !== prevState.todos) {
-      localStorage.setItem('todos', JSON.stringify(this.state.todos));
-    }
-  }
-
   render() {
-    const { todos, filter } = this.state;
+    const { todos, filter, showModal } = this.state;
     const totalTodoCount = todos.length;
     const completedTodoCount = this.calculateCompletedTodos();
     const visibleTodos = this.getVisibleTodos();
@@ -93,13 +101,19 @@ class App extends Component {
     return (
       <Container>
         {/* TODO: вынести в отдельный компонент */}
+        <button type="button" onClick={this.toggleModal}>
+          Открыть модалку
+        </button>
+        {showModal && (
+          <Modal onClose={this.toggleModal}>
+            <TodoEditor onSubmit={this.addTodo} />
+          </Modal>
+        )}
 
         <div>
           <p>Всего заметок: {totalTodoCount}</p>
           <p>Выполнено: {completedTodoCount}</p>
         </div>
-
-        <TodoEditor onSubmit={this.addTodo} />
 
         <Filter value={filter} onChange={this.changeFilter} />
 
